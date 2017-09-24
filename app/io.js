@@ -1,6 +1,13 @@
 import fs from 'fs';
+import os from 'os';
 
 const io = {
+  getHomeDir: () => {
+    const homeDir = os.homedir();
+
+    return homeDir;
+  },
+
   getFolderContent: (path) => {
     const stats = fs.statSync(path);
 

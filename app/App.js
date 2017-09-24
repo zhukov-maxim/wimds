@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+
+import io from './io';
+
 import './app.global.css';
 
 class App extends Component {
@@ -8,10 +11,52 @@ class App extends Component {
     super(props);
 
     this.state = {
-      depth: 1
+      data: null,
+      depth: 1,
+      isAnalyzing: false,
+      path: props.path
     };
 
+    this.handleChooseButtonClick = this.handleChooseButtonClick.bind(this);
+    this.handleAnalyzeButtonClick = this.handleAnalyzeButtonClick.bind(this);
+    this.handlePathChange = this.handlePathChange.bind(this);
+    this.handlePathChoose = this.handlePathChoose.bind(this);
     this.handleDepthChange = this.handleDepthChange.bind(this);
+  }
+
+  addDirectory(node) {
+    if (node) {
+      node.directory = true;
+      node.webkitdirectory = true;
+    }
+  }
+
+  handleChooseButtonClick() {
+    this.chooseDirectoryButton.click();
+  }
+
+  handleAnalyzeButtonClick() {
+    const data = io.getFolderContent(this.state.path);
+
+    this.setState({
+      data
+    });
+  }
+
+  handlePathChange(e) {
+    const path = e.target.value;
+
+    this.setState({
+      path
+    });
+  }
+
+  handlePathChoose(e) {
+    const path = e.target.files[0].path;
+
+    this.setState({
+      path
+    });
   }
 
   handleDepthChange(e) {
@@ -83,16 +128,31 @@ class App extends Component {
         <input
           type="text"
           className="app__footer-input"
+          value={this.state.path}
+          onChange={this.handlePathChange}
+        />
+        <input
+          type="file"
+          className="app__footer-input"
+          style={{ display: 'none' }}
+          ref={node => {
+            this.chooseDirectoryButton = node;
+            this.addDirectory(node);
+          }}
+          onChange={this.handlePathChoose}
         />
         <button
           className="app__footer-button"
+          onClick={this.handleChooseButtonClick}
         >
           Choose...
         </button>
         <button
           className="app__footer-button"
+          onClick={this.handleAnalyzeButtonClick}
+          disabled={!this.state.path}
         >
-          Analyse
+          Analyze
         </button>
       </div>
     );
@@ -121,20 +181,20 @@ class App extends Component {
   }
 
   render() {
-    const { data } = this.props;
+    const { data } = this.state;
 
     return (
       <div className="app">
-        {
-          data ?
-            this.renderDiagram(data) :
-            this.renderLoader()
-        }
-        <div className="app__footer">
+        <div className="app__content">
           {
             data ?
-              this.renderPathSelector() :
+              this.renderDiagram(data) :
               null
+          }
+        </div>
+        <div className="app__footer">
+          {
+            this.renderPathSelector()
           }
           {
             data ?
@@ -148,11 +208,11 @@ class App extends Component {
 }
 
 App.propTypes = {
-  data: PropTypes.object
+  path: PropTypes.string
 };
 
 App.defaultProps = {
-  data: null
+  path: io.getHomeDir()
 };
 
 export default App;
